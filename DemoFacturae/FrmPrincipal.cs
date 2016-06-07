@@ -39,7 +39,7 @@ namespace DemoFacturae
 
         private void btnGenerar_Click(object sender, EventArgs e)
         {
-            XadesServices xadesServices = new XadesServices();
+            XadesService xadesService = new XadesService();
             SignatureParameters parametros = new SignatureParameters();
             string ficheroFactura = Application.StartupPath + "\\Facturae.xml";
 
@@ -54,7 +54,7 @@ namespace DemoFacturae
 
             using (FileStream fs = new FileStream(ficheroFactura, FileMode.Open))
             {
-                var docFirmado = xadesServices.Sign(fs, parametros);
+                var docFirmado = xadesService.Sign(fs, parametros);
 
                 if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {

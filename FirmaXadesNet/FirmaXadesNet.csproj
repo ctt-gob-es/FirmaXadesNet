@@ -54,14 +54,14 @@
     <Compile Include="Upgraders\IXadesUpgrader.cs" />
     <Compile Include="Upgraders\Parameters\UpgradeParameters.cs" />
     <Compile Include="Upgraders\XadesTUpgrader.cs" />
-    <Compile Include="Upgraders\XadesUpgrader.cs" />
+    <Compile Include="Upgraders\XadesUpgraderService.cs" />
     <Compile Include="Upgraders\XadesXLUpgrader.cs" />
     <Compile Include="Utils\CertUtil.cs" />
     <Compile Include="Utils\DigestUtil.cs" />
     <Compile Include="Utils\StreamExtensions.cs" />
     <Compile Include="Utils\X509Certificate2Extensions.cs" />
     <Compile Include="Utils\XMLUtil.cs" />
-    <Compile Include="XadesServices.cs" />
+    <Compile Include="XadesService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Library\Microsoft.Xades.csproj">

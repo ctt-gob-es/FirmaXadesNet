@@ -20,18 +20,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/. 
 
+using Security.Cryptography;
 using System;
-using System.IO;
-using System.Globalization;
-using System.Xml;
-using System.Xml.Schema;
-using System.Security.Cryptography;
-using System.Security.Cryptography.Xml;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Collections;
 using System.Collections.Generic;
-using Security.Cryptography;
+using System.Globalization;
+using System.IO;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.Xml;
+using System.Xml;
+using System.Xml.Schema;
 
 namespace Microsoft.Xades
 {
@@ -154,9 +154,17 @@ namespace Microsoft.Xades
         public const string XadesNamespaceUri = "http://uri.etsi.org/01903/v1.3.2#";
 
         /// <summary>
+        /// The XAdES v1.4.1 XML namespace URI
+        /// </summary>
+        public const string XadesNamespace141Uri = "http://uri.etsi.org/01903/v1.4.1#";
+
+        /// <summary>
         /// Mandated type name for the Uri reference to the SignedProperties element
         /// </summary>
-        public const string SignedPropertiesType = "http://uri.etsi.org/01903/v1.3.2#SignedProperties";
+        public const string SignedPropertiesType = "http://uri.etsi.org/01903#SignedProperties";
+
+
+        public const string XmlDsigObjectType = "http://www.w3.org/2000/09/xmldsig#Object";
         #endregion
 
         #region Private variables
@@ -1458,10 +1466,39 @@ namespace Microsoft.Xades
             this.m_signature.SignatureValue = description.CreateFormatter(signingKey).CreateSignature(hash);
         }
 
+        public Reference GetContentReference()
+        {
+            XadesObject xadesObject = null;
+
+            if (this.cachedXadesObjectDocument != null)
+            {
+                xadesObject = new XadesObject();
+                xadesObject.LoadXml(this.cachedXadesObjectDocument.DocumentElement, null);
+            }
+            else
+            {
+                xadesObject = this.XadesObject;
+            }
+
+            if (xadesObject.QualifyingProperties.SignedProperties.SignedDataObjectProperties.DataObjectFormatCollection.Count > 0)
+            {
+                string referenceId = xadesObject.QualifyingProperties.SignedProperties.SignedDataObjectProperties.DataObjectFormatCollection[0].ObjectReferenceAttribute.Substring(1);
+
+                foreach (var reference in SignedInfo.References)
+                {
+                    if (((Reference)reference).Id == referenceId)
+                    {
+                        return (Reference)reference;
+                    }
+                }
+            }
+
+            return (Reference)SignedInfo.References[0];
+        }
 
         public void FindContentElement()
         {
-            Reference contentRef = (Reference)this.SignedInfo.References[0];
+            Reference contentRef = GetContentReference();
 
             if (!string.IsNullOrEmpty(contentRef.Uri) &&
                 contentRef.Uri.StartsWith("#"))
@@ -1615,16 +1652,6 @@ namespace Microsoft.Xades
                 XmlDocument xmlDoc = null;
                 bool addSignatureNamespaces = false;
 
-                if (reference2.DigestMethod == null)
-                {
-                    reference2.DigestMethod = "http://www.w3.org/2000/09/xmldsig#sha1";
-                }
-
-                if (reference2.Type != null && reference2.Type.IndexOf("/v1.3.2") > 0)
-                {
-                    reference2.Type = reference2.Type.Replace("/v1.3.2", "");
-                }
-
                 if (reference2.Uri.StartsWith("#KeyInfoId-"))
                 {
                     XmlElement keyInfoXml = this.KeyInfo.GetXml();
@@ -1635,22 +1662,30 @@ namespace Microsoft.Xades
 
                     addSignatureNamespaces = true;
                 }
-                else if (reference2.Type == "http://uri.etsi.org/01903#SignedProperties")
+                else if (reference2.Type == SignedPropertiesType)
                 {
                     xmlDoc = (XmlDocument)cachedXadesObjectDocument.Clone();
 
                     addSignatureNamespaces = true;
                 }
-                else if (reference2.Type == "http://www.w3.org/2000/09/xmldsig#Object")
+                else if (reference2.Type == XmlDsigObjectType)
                 {
                     string dataObjectId = reference2.Uri.Substring(1);
                     XmlElement dataObjectXml = null;
-                     
+
                     foreach (DataObject dataObject in this.m_signature.ObjectList)
                     {
                         if (dataObjectId == dataObject.Id)
                         {
-                            dataObjectXml = dataObject.GetXml();                            
+                            dataObjectXml = dataObject.GetXml();
+
+                            SetPrefix(XmlDSigPrefix, dataObjectXml);
+
+                            addSignatureNamespaces = true;
+
+                            xmlDoc = new XmlDocument();
+                            xmlDoc.LoadXml(dataObjectXml.OuterXml);
+
                             break;
                         }
                     }
@@ -1659,21 +1694,18 @@ namespace Microsoft.Xades
                     if (dataObjectXml == null)
                     {
                         dataObjectXml = GetIdElement(this.signatureDocument, dataObjectId);
-                    }
-                    
-                    if (dataObjectXml != null)
-                    {
-                        SetPrefix(XmlDSigPrefix, dataObjectXml);
 
-                        xmlDoc = new XmlDocument();
-                        xmlDoc.LoadXml(dataObjectXml.OuterXml);
+                        if (dataObjectXml != null)
+                        {
+                            xmlDoc = new XmlDocument();
+                            xmlDoc.PreserveWhitespace = true;
+                            xmlDoc.LoadXml(dataObjectXml.OuterXml);
+                        }
+                        else
+                        {
+                            throw new Exception("No reference target found");
+                        }
                     }
-                    else
-                    {
-                        throw new Exception("No reference target found");
-                    }
-
-                    addSignatureNamespaces = true;
                 }
                 else
                 {
@@ -1692,7 +1724,10 @@ namespace Microsoft.Xades
                     }
                 }
 
-                CanonicalXmlNodeList_Add.Invoke(refList, new object[] { xmlDoc.DocumentElement });
+                if (xmlDoc != null)
+                {
+                    CanonicalXmlNodeList_Add.Invoke(refList, new object[] { xmlDoc.DocumentElement });
+                }
 
                 Reference_UpdateHashValue.Invoke(reference2, new object[] { xmlDoc, refList });
 

@@ -22,22 +22,23 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using FirmaXadesNet;
+using FirmaXadesNet.Clients;
+using FirmaXadesNet.Crypto;
+using FirmaXadesNet.Signature;
+using FirmaXadesNet.Signature.Parameters;
+using FirmaXadesNet.Upgraders;
+using FirmaXadesNet.Upgraders.Parameters;
+using System;
 using System.IO;
+using System.Windows.Forms;
 
 namespace TestFirmaXades
 {
     public partial class FrmPrincipal : Form
     {
-        FirmaXades _firmaXades = new FirmaXades();
+        XadesServices _xadesServices = new XadesServices();
+        SignatureDocument _signatureDocument;
         
         public FrmPrincipal()
         {
@@ -52,18 +53,38 @@ namespace TestFirmaXades
             }
         }
 
+        private SignaturePolicyInfo ObtenerPolitica()
+        {
+            SignaturePolicyInfo spi = new SignaturePolicyInfo();
+
+            spi.PolicyIdentifier = txtIdentificadorPolitica.Text;
+            spi.PolicyHash = txtHashPolitica.Text;
+            spi.PolicyUri = txtURIPolitica.Text;
+
+            return spi;
+        }
+
+        private SignatureParameters ObtenerParametrosFirma()
+        {
+            SignatureParameters parametros = new SignatureParameters();
+
+            parametros.SigningCertificate = FirmaXadesNet.Utils.CertUtil.SelectCertificate();
+            parametros.SignatureMethod = SignatureMethod.RSAwithSHA256;
+            parametros.SigningDate = DateTime.Now;
+
+            return parametros;
+        }
+
         private void btnFirmar_Click(object sender, EventArgs e)
         {
-
-            _firmaXades.PolicyIdentifier = txtIdentificadorPolitica.Text;
-            _firmaXades.PolicyHash = txtHashPolitica.Text;
-            _firmaXades.PolicyUri = txtURIPolitica.Text;
 
             if (string.IsNullOrEmpty(txtFichero.Text))
             {
                 MessageBox.Show("Debe seleccionar un fichero para firmar.");
                 return;
             }
+
+            SignatureParameters parametros = ObtenerParametrosFirma();
             
             if (rbInternnallyDetached.Checked)
             {
@@ -71,18 +92,31 @@ namespace TestFirmaXades
                 string mimeType = "application/" + 
                     System.IO.Path.GetExtension(txtFichero.Text).ToLower().Replace(".", "");
 
-                _firmaXades.SetContentInternallyDetached(txtFichero.Text, mimeType);
+                parametros.SignaturePolicyInfo = ObtenerPolitica();
+                parametros.SignaturePackaging = SignaturePackaging.INTERNALLY_DETACHED;
+                parametros.InputMimeType = mimeType;
             }
             else if (rbExternallyDetached.Checked)
             {
-                _firmaXades.SetContentExternallyDetached(txtFichero.Text);
+                parametros.SignaturePackaging = SignaturePackaging.EXTERNALLY_DETACHED;
+                parametros.ExternalContentUri = txtFichero.Text;
             }
             else if (rbEnveloped.Checked)
             {
-                _firmaXades.SetContentEnveloped(txtFichero.Text);
+                parametros.SignaturePackaging = SignaturePackaging.ENVELOPED;
             }
 
-            _firmaXades.Sign(_firmaXades.SelectCertificate());
+            if (parametros.SignaturePackaging != SignaturePackaging.EXTERNALLY_DETACHED)
+            {
+                using (FileStream fs = new FileStream(txtFichero.Text, FileMode.Open))
+                {
+                    _signatureDocument = _xadesServices.Sign(fs, parametros);
+                }
+            }
+            else
+            {
+                _signatureDocument = _xadesServices.Sign(null, parametros);
+            }
 
             MessageBox.Show("Firma completada, ahora puede Guardar la firma o ampliarla a Xades-T.", "Test firma XADES", 
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -91,25 +125,27 @@ namespace TestFirmaXades
 
         private void btnCoFirmar_Click(object sender, EventArgs e)
         {
-            _firmaXades.PolicyIdentifier = txtIdentificadorPolitica.Text;
-            _firmaXades.PolicyHash = txtHashPolitica.Text;
-            _firmaXades.PolicyUri = txtURIPolitica.Text;
+            SignatureParameters parametros = ObtenerParametrosFirma();
 
-            _firmaXades.CoSign(_firmaXades.SelectCertificate());
+            _signatureDocument = _xadesServices.CoSign(_signatureDocument, parametros);
 
             MessageBox.Show("Firma completada correctamente.", "Test firma XADES",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void btnXadesT_Click(object sender, EventArgs e)
+        private void AmpliarFirma(SignatureFormat formato)
         {
             try
             {
-                _firmaXades.TSAServer = txtURLSellado.Text;
+                UpgradeParameters parametros = new UpgradeParameters();
 
-                _firmaXades.UpgradeToXadesT();
+                parametros.TimeStampClient = new TimeStampClient(txtURLSellado.Text);
+                parametros.OCSPServers.Add(txtOCSP.Text);
 
-                MessageBox.Show("Sello de tiempo aplicado correctamente.\nAhora puede Guardar la firma o ampliarla a Xades-XL", "Test firma XADES", 
+                XadesUpgrader upgrader = new XadesUpgrader();
+                upgrader.Upgrade(_signatureDocument, formato, parametros);
+
+                MessageBox.Show("Firma ampliada correctamente", "Test firma XADES",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
@@ -118,30 +154,21 @@ namespace TestFirmaXades
             }
         }
 
+        private void btnXadesT_Click(object sender, EventArgs e)
+        {
+            AmpliarFirma(SignatureFormat.XAdES_T);
+        }
+
         private void btnXadesXL_Click(object sender, EventArgs e)
         {
-            try
-            {
-                _firmaXades.TSAServer = txtURLSellado.Text;
-
-                _firmaXades.AddOCSPServer(txtOCSP.Text);
-
-                _firmaXades.UpgradeToXadesXL();
-
-                MessageBox.Show("Firma ampliada correctamente a XADES-XL.", "Test firma XADES", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Ha ocurrido un error ampliando la firma: " + ex.Message);
-            }
+            AmpliarFirma(SignatureFormat.XAdES_XL);
         }
 
         private void GuardarFirma()
         {
             if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                _firmaXades.Save(saveFileDialog1.FileName);
+                _signatureDocument.Save(saveFileDialog1.FileName);
 
                 MessageBox.Show("Firma guardada correctamente.");
             }
@@ -158,29 +185,27 @@ namespace TestFirmaXades
             {
                 using (FileStream fs = new FileStream(openFileDialog1.FileName, FileMode.Open))
                 {
-                    var firmas = FirmaXades.Load(fs);
+                    var firmas = XadesServices.Load(fs);
 
                     FrmSeleccionarFirma frm = new FrmSeleccionarFirma(firmas);
 
                     if (frm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
-                        _firmaXades = frm.FirmaSeleccionada;
+                        _signatureDocument = frm.FirmaSeleccionada;
                     }
                     else
                     {
                         MessageBox.Show("Debe seleccionar una firma.");
                     }
                 }
-            }  
+            }
         }
 
         private void btnContraFirma_Click(object sender, EventArgs e)
         {
-            _firmaXades.PolicyIdentifier = txtIdentificadorPolitica.Text;
-            _firmaXades.PolicyHash = txtHashPolitica.Text;
-            _firmaXades.PolicyUri = txtURIPolitica.Text;
+            SignatureParameters parametros = ObtenerParametrosFirma();
 
-            _firmaXades.CounterSign(_firmaXades.SelectCertificate());
+            _signatureDocument = _xadesServices.CounterSign(_signatureDocument, parametros);
 
             MessageBox.Show("Firma completada correctamente.", "Test firma XADES",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);

@@ -21,16 +21,13 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Xades;
+using System.Collections;
+using System.IO;
+using System.Security.Cryptography;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Xml;
-using System.IO;
-using System.Security.Cryptography.Xml;
-using System.Collections;
-using Microsoft.Xades;
-using System.Security.Cryptography;
 
 namespace FirmaXadesNet.Utils
 {
@@ -91,24 +88,36 @@ namespace FirmaXadesNet.Utils
 
                     foreach (XmlNode xmlNode in searchXmlNodeList)
                     {
-                        XmlAttribute dsNamespace = xmlDocument.CreateAttribute("xmlns:" + XadesSignedXml.XmlDSigPrefix);
-                        dsNamespace.Value = XadesSignedXml.XmlDsigNamespaceUrl;
-                        xmlNode.Attributes.Append(dsNamespace);
-                       
+                        XmlElement clonedElement = (XmlElement)xmlNode.Clone();
+
+                        clonedElement.SetAttribute("xmlns:" + XadesSignedXml.XmlDSigPrefix, XadesSignedXml.XmlDsigNamespaceUrl);
+
                         foreach (var attr in namespaces)
                         {
-                            XmlAttribute attrNamespace = xmlDocument.CreateAttribute(attr.Name);
-                            attrNamespace.Value = attr.Value;
-                            xmlNode.Attributes.Append(attrNamespace);
+                            clonedElement.SetAttribute(attr.Name, attr.Value);
                         }
 
-                        byte[] canonicalizedElement = ApplyTransform((XmlElement)xmlNode, new XmlDsigC14NTransform());
+                        byte[] canonicalizedElement = ApplyTransform(clonedElement, new XmlDsigC14NTransform());
                         msResult.Write(canonicalizedElement, 0, canonicalizedElement.Length);
                     }
                 }
 
                 return msResult.ToArray();
             }
+        }
+
+        /// <summary>
+        /// Carga un documento XML
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static XmlDocument LoadDocument(Stream input)
+        {
+            XmlDocument document = new XmlDocument();
+            document.PreserveWhitespace = true;
+            document.Load(input);
+
+            return document;
         }
 
         #endregion

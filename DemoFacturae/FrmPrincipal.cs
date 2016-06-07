@@ -22,15 +22,11 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using FirmaXadesNet;
+using FirmaXadesNet.Signature.Parameters;
+using System;
+using System.IO;
+using System.Windows.Forms;
 
 namespace DemoFacturae
 {
@@ -43,21 +39,28 @@ namespace DemoFacturae
 
         private void btnGenerar_Click(object sender, EventArgs e)
         {
-            FirmaXades firmaXades = new FirmaXades();
+            XadesServices xadesServices = new XadesServices();
+            SignatureParameters parametros = new SignatureParameters();
             string ficheroFactura = Application.StartupPath + "\\Facturae.xml";
 
-            firmaXades.SetContentEnveloped(ficheroFactura);
-            
             // Política de firma de factura-e 3.1
-            firmaXades.PolicyIdentifier = "http://www.facturae.es/politica_de_firma_formato_facturae/politica_de_firma_formato_facturae_v3_1.pdf";
-            firmaXades.PolicyHash = "Ohixl6upD6av8N7pEvDABhEL6hM=";
+            parametros.SignaturePolicyInfo = new SignaturePolicyInfo();
+            parametros.SignaturePolicyInfo.PolicyIdentifier = "http://www.facturae.es/politica_de_firma_formato_facturae/politica_de_firma_formato_facturae_v3_1.pdf";
+            parametros.SignaturePolicyInfo.PolicyHash = "Ohixl6upD6av8N7pEvDABhEL6hM=";
+            parametros.SignaturePackaging = SignaturePackaging.ENVELOPED;
+            parametros.InputMimeType = "text/xml";
 
-            firmaXades.Sign(firmaXades.SelectCertificate());
+            parametros.SigningCertificate = FirmaXadesNet.Utils.CertUtil.SelectCertificate();
 
-            if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            using (FileStream fs = new FileStream(ficheroFactura, FileMode.Open))
             {
-                firmaXades.Save(saveFileDialog1.FileName);
-                MessageBox.Show("Fichero guardado correctamente.");
+                var docFirmado = xadesServices.Sign(fs, parametros);
+
+                if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    docFirmado.Save(saveFileDialog1.FileName);
+                    MessageBox.Show("Fichero guardado correctamente.");
+                }
             }
         }
     }

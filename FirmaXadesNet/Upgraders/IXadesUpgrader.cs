@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// XadesUpgrader.cs
+// IXadesUpgrader.cs
 //
 // FirmaXadesNet - Librería para la generación de firmas XADES
 // Copyright (C) 2016 Dpto. de Nuevas Tecnologías de la Dirección General de Urbanismo del Ayto. de Cartagena
@@ -26,41 +26,8 @@ using FirmaXadesNet.Upgraders.Parameters;
 
 namespace FirmaXadesNet.Upgraders
 {
-    public enum SignatureFormat
+    interface IXadesUpgrader
     {
-        XAdES_T,
-        XAdES_XL
-    }
-
-    public class XadesUpgrader
-    {
-        #region Public methods
-
-        public void Upgrade(SignatureDocument sigDocument, SignatureFormat toFormat, UpgradeParameters parameters)
-        {
-            XadesTUpgrader xadesTUpgrader = null;
-            XadesXLUpgrader xadesXLUpgrader = null;
-
-            SignatureDocument.CheckSignatureDocument(sigDocument);
-
-            if (toFormat == SignatureFormat.XAdES_T)
-            {
-                xadesTUpgrader = new XadesTUpgrader();
-                xadesTUpgrader.Upgrade(sigDocument, parameters);
-            }
-            else
-            {
-                if (sigDocument.XadesSignature.UnsignedProperties.UnsignedSignatureProperties.SignatureTimeStampCollection.Count == 0)
-                {
-                    xadesTUpgrader = new XadesTUpgrader();
-                    xadesTUpgrader.Upgrade(sigDocument, parameters);
-                }
-
-                xadesXLUpgrader = new XadesXLUpgrader();
-                xadesXLUpgrader.Upgrade(sigDocument, parameters);
-            }
-        }
-
-        #endregion
+        void Upgrade(SignatureDocument signatureDocument, UpgradeParameters parameters);        
     }
 }

@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// XadesUpgrader.cs
+// SignatureMethod.cs
 //
 // FirmaXadesNet - Librería para la generación de firmas XADES
 // Copyright (C) 2016 Dpto. de Nuevas Tecnologías de la Dirección General de Urbanismo del Ayto. de Cartagena
@@ -21,46 +21,51 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
-using FirmaXadesNet.Signature;
-using FirmaXadesNet.Upgraders.Parameters;
 
-namespace FirmaXadesNet.Upgraders
+namespace FirmaXadesNet.Crypto
 {
-    public enum SignatureFormat
+    public class SignatureMethod
     {
-        XAdES_T,
-        XAdES_XL
-    }
+        #region Private variables
 
-    public class XadesUpgrader
-    {
-        #region Public methods
+        private string _name;
+        private string _uri;
 
-        public void Upgrade(SignatureDocument sigDocument, SignatureFormat toFormat, UpgradeParameters parameters)
+        #endregion
+
+        #region Public properties
+
+        public static SignatureMethod RSAwithSHA1 = new SignatureMethod("RSAwithSHA1", "http://www.w3.org/2000/09/xmldsig#rsa-sha1");
+        public static SignatureMethod RSAwithSHA256 = new SignatureMethod("RSAwithSHA256", "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
+        public static SignatureMethod RSAwithSHA512 = new SignatureMethod("RSAwithSHA512", "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512");        
+
+        public string Name
         {
-            XadesTUpgrader xadesTUpgrader = null;
-            XadesXLUpgrader xadesXLUpgrader = null;
-
-            SignatureDocument.CheckSignatureDocument(sigDocument);
-
-            if (toFormat == SignatureFormat.XAdES_T)
+            get
             {
-                xadesTUpgrader = new XadesTUpgrader();
-                xadesTUpgrader.Upgrade(sigDocument, parameters);
+                return _name;
             }
-            else
-            {
-                if (sigDocument.XadesSignature.UnsignedProperties.UnsignedSignatureProperties.SignatureTimeStampCollection.Count == 0)
-                {
-                    xadesTUpgrader = new XadesTUpgrader();
-                    xadesTUpgrader.Upgrade(sigDocument, parameters);
-                }
+        }
 
-                xadesXLUpgrader = new XadesXLUpgrader();
-                xadesXLUpgrader.Upgrade(sigDocument, parameters);
+        public string URI
+        {
+            get
+            {
+                return _uri;
             }
         }
 
         #endregion
+
+        #region Constructors
+
+        private SignatureMethod(string name, string uri)
+        {
+            _name = name;
+            _uri = uri;
+        }
+
+        #endregion
     }
+
 }

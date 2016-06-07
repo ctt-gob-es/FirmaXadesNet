@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// DigestUtil.cs
+// X509Certificate2Extensions.cs
 //
 // FirmaXadesNet - Librería para la generación de firmas XADES
 // Copyright (C) 2016 Dpto. de Nuevas Tecnologías de la Dirección General de Urbanismo del Ayto. de Cartagena
@@ -21,31 +21,45 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
-using Microsoft.Xades;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace FirmaXadesNet.Utils
 {
-    class DigestUtil
+    static class X509Certificate2Extensions
     {
-        #region Public methods
-
-        public static void SetCertDigest(byte[] rawCert, FirmaXadesNet.Crypto.DigestMethod digestMethod, DigestAlgAndValueType destination)
-        {
-            using (var hashAlg = digestMethod.GetHashAlgorithm())
+        public static string GetSerialNumberAsDecimalString(this X509Certificate2 certificate)
+        {            
+            List<int> dec = new List<int> { 0 };
+            
+            foreach (char c in certificate.SerialNumber)
             {
-                destination.DigestMethod.Algorithm = digestMethod.URI;
-                destination.DigestValue = hashAlg.ComputeHash(rawCert);
+                int carry = Convert.ToInt32(c.ToString(), 16);
+
+                for (int i = 0; i < dec.Count; ++i)
+                {
+                    int val = dec[i] * 16 + carry;
+                    dec[i] = val % 10;
+                    carry = val / 10;
+                }
+
+                while (carry > 0)
+                {
+                    dec.Add(carry % 10);
+                    carry /= 10;
+                }
             }
+
+            var chars = dec.Select(d => (char)('0' + d));
+            var cArr = chars.Reverse().ToArray();
+            return new string(cArr);
         }
 
-        public static byte[] ComputeHashValue(byte[] value, FirmaXadesNet.Crypto.DigestMethod digestMethod)
+        public static Org.BouncyCastle.X509.X509Certificate ToBouncyX509Certificate(this X509Certificate2 certificate)
         {
-            using (var alg = digestMethod.GetHashAlgorithm())
-            {
-                return alg.ComputeHash(value);
-            }
+            return Org.BouncyCastle.Security.DotNetUtilities.FromX509Certificate(certificate);
         }
-
-        #endregion
     }
 }

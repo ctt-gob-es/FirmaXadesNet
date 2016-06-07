@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using FirmaXadesNet.Signature;
 using System.Windows.Forms;
-using FirmaXadesNet;
 
 namespace TestFirmaXades
 {
     public partial class FrmSeleccionarFirma : Form
     {
-        private FirmaXades[] _firmas = null;
+        private SignatureDocument[] _firmas = null;
 
-        public FirmaXades FirmaSeleccionada
+        public SignatureDocument FirmaSeleccionada
         {
             get
             {
@@ -22,7 +15,7 @@ namespace TestFirmaXades
             }
         }
 
-        public FrmSeleccionarFirma(FirmaXades[] firmas)
+        public FrmSeleccionarFirma(SignatureDocument[] firmas)
         {
             InitializeComponent();
 
@@ -32,7 +25,7 @@ namespace TestFirmaXades
             {
                 string textoFirma = string.Format("{0} - {1}",
                     firma.XadesSignature.XadesObject.QualifyingProperties.SignedProperties.SignedSignatureProperties.SigningTime,
-                    firma.Certificate.Subject);
+                    firma.GetSigningCertificate().Subject);
 
                 lstFirmas.Items.Add(textoFirma);
             }

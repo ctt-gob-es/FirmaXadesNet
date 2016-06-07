@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// DigestUtil.cs
+// SignaturePolicyInfo.cs
 //
 // FirmaXadesNet - Librería para la generación de firmas XADES
 // Copyright (C) 2016 Dpto. de Nuevas Tecnologías de la Dirección General de Urbanismo del Ayto. de Cartagena
@@ -21,29 +21,35 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
-using Microsoft.Xades;
+using FirmaXadesNet.Crypto;
 
-namespace FirmaXadesNet.Utils
+namespace FirmaXadesNet.Signature.Parameters
 {
-    class DigestUtil
+    public class SignaturePolicyInfo
     {
-        #region Public methods
+        #region Private variables
 
-        public static void SetCertDigest(byte[] rawCert, FirmaXadesNet.Crypto.DigestMethod digestMethod, DigestAlgAndValueType destination)
-        {
-            using (var hashAlg = digestMethod.GetHashAlgorithm())
-            {
-                destination.DigestMethod.Algorithm = digestMethod.URI;
-                destination.DigestValue = hashAlg.ComputeHash(rawCert);
-            }
-        }
+        private DigestMethod _defaultPolicyDigestAlgorithm = DigestMethod.SHA1;
 
-        public static byte[] ComputeHashValue(byte[] value, FirmaXadesNet.Crypto.DigestMethod digestMethod)
+        #endregion
+
+        #region Public properties
+
+        public string PolicyIdentifier { get; set; }
+
+        public string PolicyHash { get; set; }
+
+        public DigestMethod PolicyDigestAlgorithm { get; set; }
+
+        public string PolicyUri { get; set; }
+
+        #endregion
+
+        #region Constructors
+
+        public SignaturePolicyInfo()
         {
-            using (var alg = digestMethod.GetHashAlgorithm())
-            {
-                return alg.ComputeHash(value);
-            }
+            this.PolicyDigestAlgorithm = _defaultPolicyDigestAlgorithm;
         }
 
         #endregion

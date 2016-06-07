@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// DigestUtil.cs
+// SignatureDestination.cs
 //
 // FirmaXadesNet - Librería para la generación de firmas XADES
 // Copyright (C) 2016 Dpto. de Nuevas Tecnologías de la Dirección General de Urbanismo del Ayto. de Cartagena
@@ -21,29 +21,37 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
-using Microsoft.Xades;
+using System.Collections.Generic;
 
-namespace FirmaXadesNet.Utils
+namespace FirmaXadesNet.Signature.Parameters
 {
-    class DigestUtil
+    public class SignatureXPathExpression
     {
-        #region Public methods
+        #region Private variables
 
-        public static void SetCertDigest(byte[] rawCert, FirmaXadesNet.Crypto.DigestMethod digestMethod, DigestAlgAndValueType destination)
+        private Dictionary<string, string> _namespaces;
+
+        #endregion
+
+        #region Public properties
+
+        public string XPathExpression { get; set; }
+
+        public Dictionary<string, string> Namespaces
         {
-            using (var hashAlg = digestMethod.GetHashAlgorithm())
+            get
             {
-                destination.DigestMethod.Algorithm = digestMethod.URI;
-                destination.DigestValue = hashAlg.ComputeHash(rawCert);
+                return _namespaces;
             }
         }
 
-        public static byte[] ComputeHashValue(byte[] value, FirmaXadesNet.Crypto.DigestMethod digestMethod)
+        #endregion
+
+        #region Constructors
+
+        public SignatureXPathExpression()
         {
-            using (var alg = digestMethod.GetHashAlgorithm())
-            {
-                return alg.ComputeHash(value);
-            }
+            _namespaces = new Dictionary<string, string>();
         }
 
         #endregion

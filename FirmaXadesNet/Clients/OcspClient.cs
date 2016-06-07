@@ -21,18 +21,18 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
+using FirmaXadesNet.Utils;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Ocsp;
 using Org.BouncyCastle.X509;
-using FirmaXadesNet.Utils;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
 
 namespace FirmaXadesNet.Clients
 {
@@ -40,13 +40,6 @@ namespace FirmaXadesNet.Clients
 
     class OcspClient
     {
-
-        #region Private variables
-
-        private int _bufferSize = 0x8000;
-
-        #endregion
-
         #region Public methods
 
         /// <summary>
@@ -111,11 +104,9 @@ namespace FirmaXadesNet.Clients
         /// <summary>
         /// Procesa la respuesta del servidor OCSP y devuelve el estado del certificado
         /// </summary>
-        /// <param name="eeCert"></param>
-        /// <param name="issuerCert"></param>
         /// <param name="binaryResp"></param>
         /// <returns></returns>
-        public CertificateStatus ProcessOcspResponse(X509Certificate eeCert, X509Certificate issuerCert, byte[] binaryResp)
+        public CertificateStatus ProcessOcspResponse(byte[] binaryResp)
         {
             if (binaryResp.Length == 0)
             {

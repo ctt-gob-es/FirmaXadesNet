@@ -25,7 +25,7 @@ namespace TestFirmaXades
             {
                 string textoFirma = string.Format("{0} - {1}",
                     firma.XadesSignature.XadesObject.QualifyingProperties.SignedProperties.SignedSignatureProperties.SigningTime,
-                    firma.GetSigningCertificate().Subject);
+                    firma.XadesSignature.GetSigningCertificate().Subject);
 
                 lstFirmas.Items.Add(textoFirma);
             }

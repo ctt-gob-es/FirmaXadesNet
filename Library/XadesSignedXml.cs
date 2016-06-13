@@ -717,6 +717,19 @@ namespace Microsoft.Xades
             return retVal;
         }
 
+
+        public X509Certificate2 GetSigningCertificate()
+        {
+            XmlNode keyXml = this.KeyInfo.GetXml().GetElementsByTagName("X509Certificate", SignedXml.XmlDsigNamespaceUrl)[0];
+
+            if (keyXml == null)
+            {
+                throw new Exception("No se ha podido obtener el certificado de firma");
+            }
+
+            return new X509Certificate2(Convert.FromBase64String(keyXml.InnerText));
+        }
+
         #region XadesCheckSignature routines
         /// <summary>
         /// Check the signature of the underlying XMLDSIG signature
@@ -726,16 +739,42 @@ namespace Microsoft.Xades
         {
             bool retVal = false;
 
-            KeyInfo keyInfo = new KeyInfo();
-            X509Certificate xmldsigCert = new X509Certificate(System.Text.Encoding.ASCII.GetBytes(this.KeyInfo.GetXml().InnerText));
-            keyInfo.AddClause(new KeyInfoX509Data(xmldsigCert));
-            this.KeyInfo = keyInfo;
+            if (this.KeyInfo == null)
+            {
+                KeyInfo keyInfo = new KeyInfo();
+                X509Certificate xmldsigCert = GetSigningCertificate();
+                keyInfo.AddClause(new KeyInfoX509Data(xmldsigCert));
+                this.KeyInfo = keyInfo;
+            }
 
-            retVal = this.CheckSignature();
+            SignatureDescription description = CryptoConfig2.CreateFromName(this.SignedInfo.SignatureMethod) as SignatureDescription;
+
+            if (description == null)
+            {
+                if (this.SignedInfo.SignatureMethod == "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256")
+                {
+                    CryptoConfig2.AddAlgorithm(typeof(Microsoft.Xades.RSAPKCS1SHA256SignatureDescription), "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
+                }
+                else if (this.SignedInfo.SignatureMethod == "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512")
+                {
+                    CryptoConfig2.AddAlgorithm(typeof(Microsoft.Xades.RSAPKCS1SHA512SignatureDescription), "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512");
+                }                
+            }
+
+            retVal = this.CheckDigestedReferences();
+
             if (retVal == false)
             {
                 throw new CryptographicException("CheckXmldsigSignature() failed");
-            }
+            }                       
+
+            var key = this.GetPublicKey();
+            retVal = this.CheckSignedInfo(key);
+
+            if (retVal == false)
+            {
+                throw new CryptographicException("CheckXmldsigSignature() failed");
+            }                       
 
             return retVal;
         }
@@ -835,7 +874,7 @@ namespace Microsoft.Xades
             //}
             //string xmldsigCertHash = Convert.ToBase64String(((X509Certificate)keyInfoX509Data.Certificates[0]).GetCertHash());
 
-            X509Certificate xmldsigCert = new X509Certificate(System.Text.Encoding.ASCII.GetBytes(this.KeyInfo.GetXml().InnerText));
+            X509Certificate xmldsigCert = GetSigningCertificate();
             string xmldsigCertHash = Convert.ToBase64String(xmldsigCert.GetCertHash());
 
             CertCollection xadesSigningCertificateCollection = this.XadesObject.QualifyingProperties.SignedProperties.SignedSignatureProperties.SigningCertificate.CertCollection;
@@ -844,6 +883,7 @@ namespace Microsoft.Xades
                 throw new CryptographicException("Certificate not found in SigningCertificate element while doing CheckSameCertificate()");
             }
             string xadesCertHash = Convert.ToBase64String(((Cert)xadesSigningCertificateCollection[0]).CertDigest.DigestValue);
+
 
             if (String.Compare(xmldsigCertHash, xadesCertHash, true, CultureInfo.InvariantCulture) != 0)
             {
@@ -1740,12 +1780,62 @@ namespace Microsoft.Xades
             }
         }
 
+
+        private AsymmetricAlgorithm GetPublicKey()
+        {
+            Type SignedXml_Type = typeof(SignedXml);
+
+            MethodInfo SignedXml_Type_GetPublicKey = SignedXml_Type.GetMethod("GetPublicKey", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            return SignedXml_Type_GetPublicKey.Invoke(this, null) as AsymmetricAlgorithm;
+        }
+
+
+        private bool CheckDigestedReferences()
+        {
+            Type SignedXml_Type = typeof(SignedXml);
+
+            MethodInfo SignedXml_Type_CheckDigestedReferences = SignedXml_Type.GetMethod("CheckDigestedReferences", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            return Convert.ToBoolean(SignedXml_Type_CheckDigestedReferences.Invoke(this, null));
+        }
+
+       
+        private bool CheckSignedInfo(AsymmetricAlgorithm key)
+        {
+            if (key == null)
+                throw new ArgumentNullException("key");
+
+            SignatureDescription signatureDescription = CryptoConfig2.CreateFromName(SignatureMethod) as SignatureDescription;
+            if (signatureDescription == null)
+                throw new CryptographicException("signature description can't be created");
+
+            // Let's see if the key corresponds with the SignatureMethod
+            Type ta = Type.GetType(signatureDescription.KeyAlgorithm);
+            Type tb = key.GetType();
+            if ((ta != tb) && !ta.IsSubclassOf(tb) && !tb.IsSubclassOf(ta))
+                // Signature method key mismatch
+                return false;
+
+            HashAlgorithm hashAlgorithm = signatureDescription.CreateDigest();
+            if (hashAlgorithm == null)
+                throw new CryptographicException("signature description can't be created");
+            
+            /// NECESARIO PARA EL CALCULO CORRECTO
+            byte[] hashval = GetC14NDigest(hashAlgorithm, "ds");
+
+            AsymmetricSignatureDeformatter asymmetricSignatureDeformatter = signatureDescription.CreateDeformatter(key);
+
+            return asymmetricSignatureDeformatter.VerifySignature(hashval, m_signature.SignatureValue);
+        }
+        
+        
         /// <summary>
         /// We won't call System.Security.Cryptography.Xml.SignedXml.GetC14NDigest(), as we want to use our own.
         /// </summary>
         private byte[] GetC14NDigest(HashAlgorithm hash)
         {
-            return null;
+            return null;            
         }
 
         /// <summary>

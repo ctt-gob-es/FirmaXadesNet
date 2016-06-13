@@ -23,6 +23,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using FirmaXadesNet;
+using FirmaXadesNet.Crypto;
 using FirmaXadesNet.Signature.Parameters;
 using System;
 using System.IO;
@@ -50,16 +51,17 @@ namespace DemoFacturae
             parametros.SignaturePackaging = SignaturePackaging.ENVELOPED;
             parametros.InputMimeType = "text/xml";
 
-            parametros.SigningCertificate = FirmaXadesNet.Utils.CertUtil.SelectCertificate();
-
-            using (FileStream fs = new FileStream(ficheroFactura, FileMode.Open))
+            using (parametros.Signer = new Signer(FirmaXadesNet.Utils.CertUtil.SelectCertificate()))
             {
-                var docFirmado = xadesService.Sign(fs, parametros);
-
-                if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                using (FileStream fs = new FileStream(ficheroFactura, FileMode.Open))
                 {
-                    docFirmado.Save(saveFileDialog1.FileName);
-                    MessageBox.Show("Fichero guardado correctamente.");
+                    var docFirmado = xadesService.Sign(fs, parametros);
+
+                    if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        docFirmado.Save(saveFileDialog1.FileName);
+                        MessageBox.Show("Fichero guardado correctamente.");
+                    }
                 }
             }
         }

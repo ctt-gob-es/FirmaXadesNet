@@ -29,6 +29,7 @@ using FirmaXadesNet.Signature;
 using FirmaXadesNet.Signature.Parameters;
 using FirmaXadesNet.Upgraders;
 using FirmaXadesNet.Upgraders.Parameters;
+using FirmaXadesNet.Utils;
 using System;
 using System.IO;
 using System.Windows.Forms;
@@ -66,9 +67,7 @@ namespace TestFirmaXades
 
         private SignatureParameters ObtenerParametrosFirma()
         {
-            SignatureParameters parametros = new SignatureParameters();
-
-            parametros.SigningCertificate = FirmaXadesNet.Utils.CertUtil.SelectCertificate();
+            SignatureParameters parametros = new SignatureParameters();            
             parametros.SignatureMethod = SignatureMethod.RSAwithSHA256;
             parametros.SigningDate = DateTime.Now;
 
@@ -106,16 +105,19 @@ namespace TestFirmaXades
                 parametros.SignaturePackaging = SignaturePackaging.ENVELOPED;
             }
 
-            if (parametros.SignaturePackaging != SignaturePackaging.EXTERNALLY_DETACHED)
+            using(parametros.Signer = new Signer(CertUtil.SelectCertificate()))
             {
-                using (FileStream fs = new FileStream(txtFichero.Text, FileMode.Open))
+                if (parametros.SignaturePackaging != SignaturePackaging.EXTERNALLY_DETACHED)
                 {
-                    _signatureDocument = _xadesService.Sign(fs, parametros);
+                    using (FileStream fs = new FileStream(txtFichero.Text, FileMode.Open))
+                    {
+                        _signatureDocument = _xadesService.Sign(fs, parametros);
+                    }
                 }
-            }
-            else
-            {
-                _signatureDocument = _xadesService.Sign(null, parametros);
+                else
+                {
+                    _signatureDocument = _xadesService.Sign(null, parametros);
+                }
             }
 
             MessageBox.Show("Firma completada, ahora puede Guardar la firma o ampliarla a Xades-T.", "Test firma XADES", 
@@ -127,7 +129,10 @@ namespace TestFirmaXades
         {
             SignatureParameters parametros = ObtenerParametrosFirma();
 
-            _signatureDocument = _xadesService.CoSign(_signatureDocument, parametros);
+            using (parametros.Signer = new Signer(CertUtil.SelectCertificate()))
+            {
+                _signatureDocument = _xadesService.CoSign(_signatureDocument, parametros);
+            }
 
             MessageBox.Show("Firma completada correctamente.", "Test firma XADES",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -192,6 +197,11 @@ namespace TestFirmaXades
                     if (frm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
                         _signatureDocument = frm.FirmaSeleccionada;
+
+                        if (!_xadesService.Validate(_signatureDocument).IsValid)
+                        {
+                            MessageBox.Show("FIRMA NO VÁLIDA");
+                        }
                     }
                     else
                     {
@@ -205,7 +215,10 @@ namespace TestFirmaXades
         {
             SignatureParameters parametros = ObtenerParametrosFirma();
 
-            _signatureDocument = _xadesService.CounterSign(_signatureDocument, parametros);
+            using (parametros.Signer = new Signer(CertUtil.SelectCertificate()))
+            {
+                _signatureDocument = _xadesService.CounterSign(_signatureDocument, parametros);
+            }
 
             MessageBox.Show("Firma completada correctamente.", "Test firma XADES",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);

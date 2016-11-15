@@ -32,9 +32,9 @@ namespace FirmaXadesNet.Crypto
     {
         #region Private variables
 
+        private bool _disposeCryptoProvider;
         private X509Certificate2 _signingCertificate;
         private AsymmetricAlgorithm _signingKey;
-        private bool _disposeCryptoProvider;
 
         #endregion
 
@@ -66,7 +66,7 @@ namespace FirmaXadesNet.Crypto
             {
                 throw new ArgumentNullException("certificate");
             }
-            
+
             if (!certificate.HasPrivateKey)
             {
                 throw new Exception("El certificado no contiene ninguna clave privada");
@@ -95,21 +95,19 @@ namespace FirmaXadesNet.Crypto
 
         private void SetSigningKey(X509Certificate2 certificate)
         {
-            string providerName = "Microsoft Enhanced RSA and AES Cryptographic Provider";
-            int providerType = 24;
-
             var key = (RSACryptoServiceProvider)certificate.PrivateKey;
 
-            if (key.CspKeyContainerInfo.ProviderName == "Microsoft Strong Cryptographic Provider" ||
-                key.CspKeyContainerInfo.ProviderName == "Microsoft Enhanced Cryptographic Provider v1.0" ||
-                key.CspKeyContainerInfo.ProviderName == "Microsoft Base Cryptographic Provider v1.0")
+            if (key.CspKeyContainerInfo.ProviderName == CryptoConst.MS_STRONG_PROV ||
+                key.CspKeyContainerInfo.ProviderName == CryptoConst.MS_ENHANCED_PROV ||
+                key.CspKeyContainerInfo.ProviderName == CryptoConst.MS_DEF_PROV ||
+                key.CspKeyContainerInfo.ProviderName == CryptoConst.MS_DEF_RSA_SCHANNEL_PROV)
             {
                 Type CspKeyContainerInfo_Type = typeof(CspKeyContainerInfo);
 
                 FieldInfo CspKeyContainerInfo_m_parameters = CspKeyContainerInfo_Type.GetField("m_parameters", BindingFlags.NonPublic | BindingFlags.Instance);
                 CspParameters parameters = (CspParameters)CspKeyContainerInfo_m_parameters.GetValue(key.CspKeyContainerInfo);
 
-                var cspparams = new CspParameters(providerType, providerName, key.CspKeyContainerInfo.KeyContainerName);
+                var cspparams = new CspParameters(CryptoConst.PROV_RSA_AES, CryptoConst.MS_ENH_RSA_AES_PROV, key.CspKeyContainerInfo.KeyContainerName);
                 cspparams.KeyNumber = parameters.KeyNumber;
                 cspparams.Flags = parameters.Flags;
                 _signingKey = new RSACryptoServiceProvider(cspparams);

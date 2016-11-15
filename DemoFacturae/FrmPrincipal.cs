@@ -42,6 +42,7 @@ namespace DemoFacturae
         {
             XadesService xadesService = new XadesService();
             SignatureParameters parametros = new SignatureParameters();
+
             string ficheroFactura = Application.StartupPath + "\\Facturae.xml";
 
             // Política de firma de factura-e 3.1
@@ -50,6 +51,8 @@ namespace DemoFacturae
             parametros.SignaturePolicyInfo.PolicyHash = "Ohixl6upD6av8N7pEvDABhEL6hM=";
             parametros.SignaturePackaging = SignaturePackaging.ENVELOPED;
             parametros.InputMimeType = "text/xml";
+            parametros.SignerRole = new SignerRole();
+            parametros.SignerRole.ClaimedRoles.Add("emisor");
 
             using (parametros.Signer = new Signer(FirmaXadesNet.Utils.CertUtil.SelectCertificate()))
             {

@@ -21,8 +21,12 @@
 // 
 // --------------------------------------------------------------------------------------------------------------------
 
+using Org.BouncyCastle.Crypto.Parameters;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace FirmaXadesNet.Utils
 {
@@ -91,9 +95,10 @@ namespace FirmaXadesNet.Utils
 
                 store.Close();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw new Exception("No se ha podido obtener la clave privada.");
+                // Thx @rasputino
+                throw new Exception("No se ha podido obtener la clave privada.", ex);
             }
 
             return cert;

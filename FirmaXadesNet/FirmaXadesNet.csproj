@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="Clients\OcspClient.cs" />
     <Compile Include="Clients\TimeStampClient.cs" />
+    <Compile Include="Crypto\CryptoConst.cs" />
     <Compile Include="Crypto\DigestMethod.cs" />
     <Compile Include="Crypto\SignatureMethod.cs" />
     <Compile Include="Crypto\Signer.cs" />
@@ -51,6 +52,7 @@
     <Compile Include="Signature\Parameters\SignatureParameters.cs" />
     <Compile Include="Signature\Parameters\SignaturePolicyInfo.cs" />
     <Compile Include="Signature\Parameters\SignatureXPathExpression.cs" />
+    <Compile Include="Signature\Parameters\SignerRole.cs" />
     <Compile Include="Signature\SignatureDocument.cs" />
     <Compile Include="Upgraders\IXadesUpgrader.cs" />
     <Compile Include="Upgraders\Parameters\UpgradeParameters.cs" />

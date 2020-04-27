@@ -273,7 +273,6 @@
         </member>
         <member name="P:Microsoft.Xades.ClaimedRole.InnerText">
             <summary>
-            
             </summary>
         </member>
         <member name="M:Microsoft.Xades.ClaimedRole.HasChanged">
@@ -2288,7 +2287,6 @@
         </member>
         <member name="M:Microsoft.Xades.RSAPKCS1SHA256SignatureDescription.CreateDeformatter(System.Security.Cryptography.AsymmetricAlgorithm)">
             <summary>
-            
             </summary>
             <param name="key"></param>
             <returns></returns>
@@ -2296,7 +2294,6 @@
         </member>
         <member name="M:Microsoft.Xades.RSAPKCS1SHA256SignatureDescription.CreateFormatter(System.Security.Cryptography.AsymmetricAlgorithm)">
             <summary>
-            
             </summary>
             <param name="key"></param>
             <returns></returns>
@@ -2304,17 +2301,14 @@
         </member>
         <member name="T:Microsoft.Xades.RSAPKCS1SHA512SignatureDescription">
             <summary>
-            
             </summary>
         </member>
         <member name="M:Microsoft.Xades.RSAPKCS1SHA512SignatureDescription.#ctor">
             <summary>
-            
             </summary>
         </member>
         <member name="M:Microsoft.Xades.RSAPKCS1SHA512SignatureDescription.CreateDeformatter(System.Security.Cryptography.AsymmetricAlgorithm)">
             <summary>
-            
             </summary>
             <param name="key"></param>
             <returns></returns>
@@ -2322,7 +2316,6 @@
         </member>
         <member name="M:Microsoft.Xades.RSAPKCS1SHA512SignatureDescription.CreateFormatter(System.Security.Cryptography.AsymmetricAlgorithm)">
             <summary>
-            
             </summary>
             <param name="key"></param>
             <returns></returns>
@@ -2967,7 +2960,6 @@
         </member>
         <member name="P:Microsoft.Xades.TimeStamp.Id">
             <summary>
-            
             </summary>
         </member>
         <member name="P:Microsoft.Xades.TimeStamp.HashDataInfoCollection">
@@ -3523,17 +3515,14 @@
         </member>
         <member name="F:Microsoft.Xades.XadesSignedXml.XmlDsigObjectType">
             <summary>
-            
             </summary>
         </member>
         <member name="P:Microsoft.Xades.XadesSignedXml.XmlDSigPrefix">
             <summary>
-            
             </summary>
         </member>
         <member name="P:Microsoft.Xades.XadesSignedXml.XmlXadesPrefix">
             <summary>
-            
             </summary>
         </member>
         <member name="P:Microsoft.Xades.XadesSignedXml.SignatureStandard">
@@ -3779,30 +3768,25 @@
         </member>
         <member name="M:Microsoft.Xades.XadesSignedXml.ComputeSignature">
             <summary>
-            
             </summary>
             <exception cref="T:System.Security.Cryptography.CryptographicException"></exception>
         </member>
         <member name="M:Microsoft.Xades.XadesSignedXml.GetContentReference">
             <summary>
-            
             </summary>
             <returns></returns>
         </member>
         <member name="M:Microsoft.Xades.XadesSignedXml.FindContentElement">
             <summary>
-            
             </summary>
         </member>
         <member name="M:Microsoft.Xades.XadesSignedXml.GetSignatureElement">
             <summary>
-            
             </summary>
             <returns></returns>
         </member>
         <member name="M:Microsoft.Xades.XadesSignedXml.GetAllNamespaces(System.Xml.XmlElement)">
             <summary>
-            
             </summary>
             <param name="fromElement"></param>
             <returns></returns>

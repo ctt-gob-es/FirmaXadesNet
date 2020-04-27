@@ -3,6 +3,10 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
+using XadesNet;
+using XadesNet.Crypto;
+using XadesNet.Signature.Parameters;
+using XadesNet.Utils;
 
 #endregion
 
@@ -32,7 +36,7 @@ namespace DemoFacturae
             parametros.SignaturePackaging = SignaturePackaging.ENVELOPED;
             parametros.InputMimeType = "text/xml";
             parametros.SignerRole = new SignerRole();
-            parametros.SignerRole.ClaimedRoles.Add("emisor");
+            parametros.SignerRole.ClaimedRoles.Add("issuer");
 
             using (parametros.Signer = new Signer(CertUtil.SelectCertificate()))
             {
@@ -40,11 +44,9 @@ namespace DemoFacturae
                 {
                     var docFirmado = xadesService.Sign(fs, parametros);
 
-                    if (saveFileDialog1.ShowDialog() == DialogResult.OK)
-                    {
-                        docFirmado.Save(saveFileDialog1.FileName);
-                        MessageBox.Show("Fichero guardado correctamente.");
-                    }
+                    if (saveFileDialog1.ShowDialog() != DialogResult.OK) return;
+                    docFirmado.Save(saveFileDialog1.FileName);
+                    MessageBox.Show("File saved correctly.");
                 }
             }
         }

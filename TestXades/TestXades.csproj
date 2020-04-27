@@ -90,6 +90,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Xades\Microsoft.Xades.csproj">
+      <Project>{ee1dc57a-344a-4b0a-82ce-5fd328c14894}</Project>
+      <Name>Microsoft.Xades</Name>
+    </ProjectReference>
     <ProjectReference Include="..\XadesNet\XadesNet.csproj">
       <Project>{84b87815-dd45-4c60-b343-c11d45847bdf}</Project>
       <Name>XadesNet</Name>

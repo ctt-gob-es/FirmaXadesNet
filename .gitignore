@@ -188,3 +188,5 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 /.vs
+/XadesTests/output.xml
+/XadesTests/input.xml

@@ -1,24 +1,61 @@
-﻿#region
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
 using System.Xml;
 using Microsoft.Xades;
+using XadesNet.Crypto;
 using XadesNet.Signature;
 using XadesNet.Signature.Parameters;
 using XadesNet.Utils;
 using XadesNet.Validation;
 using SignerRole = Microsoft.Xades.SignerRole;
 
-#endregion
-
 namespace XadesNet
 {
     public class XadesService
     {
+        public static XmlDocument Sign(string inputPath, X509Certificate2 certificate)
+        {
+            var _xadesService = new XadesService();
+            SignatureDocument _signatureDocument;
+
+            var parameters = new SignatureParameters
+            {
+                SignatureMethod = SignatureMethod.RSAwithSHA256,
+                SigningDate = DateTime.Now,
+                SignaturePackaging = SignaturePackaging.ENVELOPED
+            };
+
+            using (parameters.Signer = new Signer(certificate))
+            {
+                using (var fs = new FileStream(inputPath, FileMode.Open))
+                {
+                    _signatureDocument = _xadesService.Sign(fs, parameters);
+                }
+            }
+
+            return _signatureDocument.Document;
+        }
+
+        public static XmlDocument SignEnveloped(XmlDocument xmlDocument, X509Certificate2 certificate)
+        {
+            var _xadesService = new XadesService();
+
+            var parametros = new SignatureParameters
+            {
+                SignatureMethod = SignatureMethod.RSAwithSHA256,
+                SigningDate = DateTime.Now,
+                SignaturePackaging = SignaturePackaging.ENVELOPED,
+                Signer = new Signer(certificate)
+            };
+
+            var _signatureDocument = _xadesService.SignEnveloped(xmlDocument, parametros);
+            return _signatureDocument.Document;
+        }
+
         #region Private variables
 
         private Reference _refContent;
@@ -29,7 +66,39 @@ namespace XadesNet
 
         #region Public methods
 
-        #region Métodos de firma
+        #region Signature methods
+
+        public SignatureDocument SignEnveloped(XmlDocument xmlDocument, SignatureParameters parameters)
+        {
+            if (parameters.Signer == null) throw new Exception("A valid certificate is required for signature");
+
+            var signatureDocument = new SignatureDocument();
+
+            switch (parameters.SignaturePackaging)
+            {
+                case SignaturePackaging.ENVELOPED:
+                    SetContentEnveloped(signatureDocument, xmlDocument);
+                    break;
+
+                case SignaturePackaging.ENVELOPING:
+                    SetContentEveloping(signatureDocument, xmlDocument);
+                    break;
+
+                case SignaturePackaging.EXTERNALLY_DETACHED:
+                    SetContentExternallyDetached(signatureDocument, parameters.ExternalContentUri);
+                    break;
+            }
+
+            SetSignatureId(signatureDocument.XadesSignature);
+
+            PrepareSignature(signatureDocument, parameters);
+
+            ComputeSignature(signatureDocument);
+
+            signatureDocument.UpdateDocument();
+
+            return signatureDocument;
+        }
 
         /// <summary>
         ///     Realiza el proceso de firmado

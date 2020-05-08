@@ -1,24 +1,24 @@
-FirmaXadesNet
+XadesNet (international fork of FirmaXadesNet)
 =============
 
-:red_circle: **Atención**: este proyecto se encuentra sin mantenimiento.
+This project is maintenance free.
 
-INTRODUCCIÓN
+INTRODUCTION
 -------------
-FirmaXadesNet es una librería desarrollada en C# para la generación de firmas XAdES realizada por el Dpto. de Nuevas Tecnologías de la Concejalía de Urbanismo del Ayuntamiento de Cartagena, la cual está basada en una modificación del XAdES starter kit desarrollado por Microsoft Francia.
+FirmaXadesNet is a library developed in C # for the generation of XAdES signatures carried out by the Department of New Technologies of the Department of Urbanism of the Cartagena City Council, which is based on a modification of the XAdES starter kit developed by Microsoft France.
 
 
-CARACTERÍSTICAS
+CHARACTERISTICS
 ---------------
 
-- Generación de firmas XAdES-BES, XAdES-EPES, XAdES-T y XAdES-XL.
+- Generation of XAdES-BES, XAdES-EPES, XAdES-T and XAdES-XL signatures.
 
-- Formatos Externally Detached, Internally Detached, Enveloped y Enveloping.
+- Externally Detached, Internally Detached, Enveloped and Enveloping formats.
 
-- Validación de certificados mediante OCSP y listas de revocación.
+- Validation of certificates through OCSP and revocation lists.
 
-- Soporte para co-firmas y contrafirmas.
+- Support for co-signatures and counter-signatures.
 
-- Soporte para métodos de firma RSA-SHA1, RSA-SHA256 y RSA-SHA512.
+- Support for RSA-SHA1, RSA-SHA256 and RSA-SHA512 signature methods.
 
-Dentro de la solución se encuentra un proyecto con ejemplos de uso de la librería. Algunos de los ejemplos hacen uso del servidor de sellado de tiempo de la ACCV.
+Within the solution is a project with examples of use of the library. Some of the examples make use of the ACCV time stamp server.
